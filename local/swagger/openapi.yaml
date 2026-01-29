@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  title: 'Тестовое апи для демонстрации'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://skelet/api/'
+    description: 'The local environment.'
+  -
+    url: 'https://example.com'
+    description: 'The production server.'
+paths:
+  /books/getList.php:
+    get:
+      tags:
+        - Books
+      summary: 'Получение книг с фильтрацией и пагинацией'
+      operationId: 907c093d8919dbd2bf958665f8d630c4
+      parameters:
+        -
+          name: UF_NAME
+          in: query
+          description: 'Наименование книги (Можно частично)'
+          required: false
+          schema:
+            type: string
+        -
+          name: UF_INVENTORY_NUMBER
+          in: query
+          description: 'Инвентарный номер'
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Успешное получение книг'
+          content:
+            application/json:
+              schema:
+                properties:
+                  error: { type: boolean, example: false }
+                  data: { type: array, items: { $ref: '#/components/schemas/book' } }
+                type: object
+        '400':
+          description: 'Ошибка в веденных данных'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+        '401':
+          description: 'Пользователь не авторизован'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: 'Нет доступа'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '404':
+          description: 'Страница не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /books/add.php:
+    post:
+      tags:
+        - Books
+      summary: 'Добавление книги'
+      description: 'Добавление единичного экземпляра'
+      operationId: 6144965f86b655dfdaa5c81b5064bd6c
+      requestBody:
+        description: 'Данные о книге'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/book'
+      responses:
+        '201':
+          description: 'Успешное добавлении книги'
+          content:
+            application/json:
+              schema: {  }
+components:
+  schemas:
+    book:
+      title: 'Book Model'
+      description: 'Таблица книг с привязкой к школам'
+      required:
+        - ID
+        - UF_NAME
+        - UF_INVENTORY_NUMBER
+        - UF_SCHOOL
+        - UF_ACTIVE
+      properties:
+        ID:
+          title: ID
+          description: 'ID книги'
+          type: integer
+          format: int64
+        UF_NAME:
+          title: 'Наименование книги'
+          description: 'Наименование книги'
+          type: string
+          format: string
+        UF_INVENTORY_NUMBER:
+          title: 'Инвентарный номер'
+          description: 'Инвентарный номер'
+          type: string
+          format: string
+        UF_SCHOOL:
+          title: 'Номер школы'
+          description: 'Номер школы из таблицы Школы'
+          type: integer
+          format: int64
+        UF_ACTIVE:
+          title: 'Статус активности'
+          description: 'Статус активности, true - активно'
+          type: boolean
+          format: bool
+      type: object
+    BadRequestResponse:
+      title: 'Ответ для 400 кода'
+      description: 'Возвращает ошибку и сообщение "Ошибка запроса"'
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: 'Ошибка запроса'
+      type: object
+    ForbiddenResponse:
+      title: 'Ответ для 403 кода'
+      description: 'Возвращает ошибку и сообщение "Отказано в доступе"'
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: 'Отказано в доступе'
+      type: object
+    NotFoundResponse:
+      title: 'Ответ для 404 кода'
+      description: 'Возвращает ошибку и сообщение "Страница не найдена"'
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: 'Страница не найдена'
+      type: object
+    UnauthorizedResponse:
+      title: 'Ответ для 401 кода'
+      description: 'Возвращает ошибку и сообщение "Неавторизован"'
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: 'Пользователь не авторизован'
+      type: object
+tags:
+  -
+    name: Books
+    description: 'Операции с книгами'

@@ -1,0 +1,25 @@
+{
+  "autoload": {
+    "psr-4": {
+      "Webizi\\": "classes"
+    }
+  },
+  "require": {
+    "andreyryabin/sprint.migration": "dev-master",
+    "zircote/swagger-php": "^5.0",
+    "phpoffice/phpspreadsheet": "^5.2",
+    "phpoffice/phpword": "^1.4"
+  },
+  "extra": {
+    "installer-paths": {
+      "modules/{$name}/": [
+        "type:bitrix-module"
+      ]
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  }
+}
