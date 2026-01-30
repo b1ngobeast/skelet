@@ -176,14 +176,14 @@ class BooksService
         requestBody: new RequestBody(
             description: 'Данные о книге',
             required: true,
-            content: new JsonContent(ref: BooksTable::class),
+            content: new JsonContent(ref: '#/components/schemas/addBook'),
         ),
         tags: ['Books'],
         responses: [
             new Response(
                 response: 201,
                 description: 'Успешное добавлении книги',
-                content: new JsonContent()
+//                content: new JsonContent()
             )
         ]
     )]
@@ -191,11 +191,8 @@ class BooksService
     public static function add($addData): array
     {
         $result = BooksTable::add($addData);
+        AddMessage2Log($result);
 
-        print "<pre>";
-        print_r($result);
-        print "</pre>";
-
-        return ['ID' => 1];
+        return ['ID' => $result];
     }
 }

@@ -66,7 +66,7 @@ class BooksTable extends DataManager
 //    public static function onBeforeAdd(Entity\Event $event)
 //    {
 //        $result = new Entity\EventResult;
-//        $data = $event->getParameter("fields");
+//        $data = $event->getParameter("fields"); 
 //
 //        if (isset($data['UF_INVENTARY_NUMBER'])) {
 //            try {

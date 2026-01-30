@@ -78,13 +78,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/book'
+              $ref: '#/components/schemas/addBook'
       responses:
         '201':
           description: 'Успешное добавлении книги'
-          content:
-            application/json:
-              schema: {  }
 components:
   schemas:
     book:
@@ -122,6 +119,30 @@ components:
           description: 'Статус активности, true - активно'
           type: boolean
           format: bool
+      type: object
+    addBook:
+      title: 'Добавление книги'
+      description: 'Схема данных для добавления книги'
+      required:
+        - UF_NAME
+        - UF_INVENTORY_NUMBER
+        - UF_SCHOOL
+      properties:
+        UF_NAME:
+          title: 'Наименование книги'
+          description: 'Наименование книги'
+          type: string
+          format: string
+        UF_INVENTORY_NUMBER:
+          title: 'Инвентарный номер'
+          description: 'Инвентарный номер'
+          type: string
+          format: string
+        UF_SCHOOL:
+          title: 'Номер школы'
+          description: 'Номер школы из таблицы Школы'
+          type: integer
+          format: int64
       type: object
     BadRequestResponse:
       title: 'Ответ для 400 кода'
