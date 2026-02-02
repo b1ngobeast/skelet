@@ -1,0 +1,7 @@
+/bitrix/
+.idea
+.vscode
+.DS_Store
+/upload/
+*.txt
+**/vendor/

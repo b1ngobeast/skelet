@@ -10,7 +10,7 @@ RequestHelper::checkAuthAndMethod("GET");
 
 $request = Application::getInstance()->getContext()->getRequest();
 $data = $request->getQueryList()->toArray() ?? [];
-//TODO доделать метод
+
 $result = BooksService::getList($data);
 
-RequestHelper::jsonSuccess($result);
+RequestHelper::jsonResponse($result);

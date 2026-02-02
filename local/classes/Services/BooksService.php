@@ -91,7 +91,6 @@ class BooksService
         ]
 
     )]
-//    TODO доделать в гете навигацию
     public static function getList(
         array $params = []
     ): array {
