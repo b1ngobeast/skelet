@@ -1,2 +1,0 @@
-}((this.BX.UI.BBCode = this.BX.UI.BBCode || {})));
-//# sourceMappingURL=encoder.bundle.js.map

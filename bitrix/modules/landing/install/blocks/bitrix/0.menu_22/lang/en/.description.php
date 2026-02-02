@@ -1,5 +1,0 @@
-<?php
-$MESS["LANDING_BLOCK_MENU_22-LINK"] = "Link";
-$MESS["LANDING_BLOCK_MENU_22-NAME"] = "Vertical menu";
-$MESS["LANDING_BLOCK_MENU_22-NAVBAR"] = "Menu";
-$MESS["LANDING_BLOCK_MENU_22_HAMB"] = "Mobile menu";

@@ -1,3 +1,0 @@
-<?php
-$MESS['LANDING_REPLACE_BY_TEMPLATES_TITLE'] = 'Шаблоны для CRM-форм';
-$MESS['LANDING_REPLACE_BY_TEMPLATES_BUTTON'] = 'Выбрать';

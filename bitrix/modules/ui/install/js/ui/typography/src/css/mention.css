@@ -1,8 +1,0 @@
-.ui-typography-mention {
-	color: var(--ui-typography-color-link);
-	text-decoration: none;
-}
-
-.ui-typography-mention:hover {
-	border-bottom: 1px solid var(--ui-typography-color-link);
-}

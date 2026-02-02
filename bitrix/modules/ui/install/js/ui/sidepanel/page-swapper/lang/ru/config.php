@@ -1,3 +1,0 @@
-<?php
-$MESS['UI_SIDEPANEL_PAGE_SWAPPER_NEXT_MAIL_MESSAGE'] = 'Следующее письмо';
-$MESS['UI_SIDEPANEL_PAGE_SWAPPER_PREVIOUS_MAIL_MESSAGE'] = 'Предыдущее письмо';

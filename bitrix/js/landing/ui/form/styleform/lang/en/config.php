@@ -1,3 +1,0 @@
-<?php
-$MESS["LANDING_REPLACE_BY_TEMPLATES_BUTTON"] = "Select template";
-$MESS["LANDING_REPLACE_BY_TEMPLATES_TITLE"] = "CRM form templates";

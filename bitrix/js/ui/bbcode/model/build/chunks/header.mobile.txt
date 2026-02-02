@@ -1,4 +1,0 @@
-/** @module bbcode/model */
-jn.define('bbcode/model', (require, exports, module) => {
-	const {Type} = require('type');
-	const {BBCodeEncoder} = require('bbcode/encoder');
