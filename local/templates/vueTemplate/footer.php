@@ -1,5 +1,5 @@
 </div>
-<script src="/path/to/vue-script.js" type="module"></script>
+<script src=""<?= SITE_TEMPLATE_PATH ?> . /js/vue/vue-script.js" type="module"></script>
 </body>
 </html>
 

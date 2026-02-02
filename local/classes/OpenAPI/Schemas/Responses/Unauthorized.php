@@ -1,6 +1,6 @@
 <?php
 
-namespace Webizi\Responses;
+namespace Webizi\OpenAPI\Schemas\Responses;
 
 use OpenApi\Attributes\Property;
 use OpenApi\Attributes\Schema;

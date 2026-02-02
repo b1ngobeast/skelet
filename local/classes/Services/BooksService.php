@@ -2,80 +2,22 @@
 
 namespace Webizi\Services;
 
+use OpenApi\Attributes\Delete;
 use OpenApi\Attributes\Get;
 use OpenApi\Attributes\Items;
 use OpenApi\Attributes\JsonContent;
 use OpenApi\Attributes\Parameter;
 use OpenApi\Attributes\Post;
 use OpenApi\Attributes\Property;
+use OpenApi\Attributes\Put;
 use OpenApi\Attributes\RequestBody;
 use OpenApi\Attributes\Response;
 use OpenApi\Attributes\Schema;
 use Webizi\Helpers\PaginationHelper;
 use Webizi\Models\BooksTable;
-use Webizi\Users\User;
 
 class BooksService
 {
-    public static function getBooksForLimits(array $params): array
-    {
-        $page = $params['pagination']['page'] ?? 1;
-        $pageSize = $params['pagination']['pageSize'] ?? 20;
-        $filter = $params['filters'] ?? [];
-        $order = $params['order'] ?? [];
-
-        $nav = PaginationHelper::getNav([
-            'pageSize' => $pageSize,
-            'page' => $page
-        ]);
-
-        $user = new User();
-
-        if ($user->checkNORMALUserGroups(['class', 'library'])) {
-            $filter['=BUILD.ID'] = $user->getOrganizationAndClass()['organization']['BUILD_ID'];
-        }
-
-        if ($user->checkNORMALUserGroups(['director', 'admin'])) {
-            $filter['=BUILD.ORG.ID'] = $user->getOrganizationAndClass()['organization']['ID'];
-        }
-
-        if ($user->checkNORMALUserGroups(['mun'])) {
-            $filter['=BUILD.ORG.MUN.ID'] = $user->getMunicipality()['mun']['ID'];
-        }
-
-        $list = CatalogBookTable::getList(
-            [
-                'select' => [
-                    'ID',
-                    'UF_NAME',
-                    'AUTHOR.UF_NAME'
-                ],
-                'filter' => $filter,
-                'order' => $order,
-                'limit' => $nav->getLimit(),
-                'offset' => $nav->getOffset(),
-                'data_doubling' => false,
-                'count_total' => true,
-            ]
-        );
-
-        while ($elem = $list->fetchObject()) {
-            $result[] = [
-                'ID' => (string)$elem->get('ID'),
-                'UF_NAME' => $elem->get('UF_NAME'),
-                'UF_AUTHOR' => $elem->getAuthor()?->get('UF_NAME'),
-            ];
-        }
-
-        $nav->setRecordCount((int)$list->getCount());
-
-        return [
-            'pagination' => PaginationHelper::setResultNav($nav),
-            'data' => $result ?? [],
-            'error' => false,
-        ];
-    }
-
     #[Get(
         path: '/books/getList.php',
         summary: 'Получение книг с фильтрацией и пагинацией',
@@ -97,7 +39,20 @@ class BooksService
                 required: false,
                 schema: new Schema(type: 'string'),
             ),
-
+            new Parameter(
+                name: 'page',
+                description: 'Порядковый номер страницы',
+                in: 'query',
+                required: false,
+                schema: new Schema(type: 'int64'),
+            ),
+            new Parameter(
+                name: 'pageSize',
+                description: 'Размер страницы',
+                in: 'query',
+                required: false,
+                schema: new Schema(type: 'int64'),
+            ),
         ],
         responses: [
             new Response(
@@ -107,8 +62,8 @@ class BooksService
                     new JsonContent(
                         properties: [
                             new Property('error', type: 'bool', example: false),
-//                            new Property('data', type: 'array', items: new Items(ref: '#/components/schemas/book'))
                             new Property('data', type: 'array', items: new Items(ref: BooksTable::class)),
+                            new Property(property: 'pagination', ref: '#/components/schemas/navSchema')
                         ]
                     )
                 ]
@@ -136,8 +91,10 @@ class BooksService
         ]
 
     )]
-    public static function getList(array $params = []): array
-    {
+//    TODO доделать в гете навигацию
+    public static function getList(
+        array $params = []
+    ): array {
         $filterFields = [
             'ID',
             'UF_NAME',
@@ -153,7 +110,22 @@ class BooksService
 
         $filter = $order = [];
 
-        $list = BooksTable::getList(['select' => ['*']]);
+        $page = $params['page'] ?? 1;
+        $pageSize = $params['pageSize'] ?? 20;
+        $nav = PaginationHelper::getNav([
+            'pageSize' => $pageSize,
+            'page' => $page
+        ]);
+
+        $list = BooksTable::getList([
+            'select' => ['*'],
+            'filter' => $filter,
+            'order' => $order,
+            'limit' => $nav->getLimit(),
+            'offset' => $nav->getOffset(),
+            'data_doubling' => false,
+            'count_total' => true,
+        ]);
 
         $result = [];
         while ($elem = $list->fetchObject()) {
@@ -166,7 +138,7 @@ class BooksService
             ];
         }
 
-        return $result;
+        return ['error' => false, 'data' => $result ?? [], 'pagination' => PaginationHelper::setResultNav($nav)];
     }
 
     #[Post(
@@ -183,16 +155,146 @@ class BooksService
             new Response(
                 response: 201,
                 description: 'Успешное добавлении книги',
-//                content: new JsonContent()
-            )
+                content: new JsonContent(ref: "#/components/schemas/SuccessCreateResponse"),
+            ),
+            new Response(
+                response: 400,
+                description: 'Ошибка в веденных данных',
+                content: new JsonContent(ref: "#/components/schemas/BadRequestResponse"),
+            ),
+            new Response(
+                response: 401,
+                description: 'Пользователь не авторизован',
+                content: new JsonContent(ref: "#/components/schemas/UnauthorizedResponse")
+            ),
+            new Response(
+                response: 403,
+                description: 'Нет доступа',
+                content: new JsonContent(ref: "#/components/schemas/ForbiddenResponse")
+            ),
+            new Response(
+                response: 404,
+                description: 'Страница не найдена',
+                content: new JsonContent(ref: "#/components/schemas/NotFoundResponse")
+            ),
         ]
     )]
-    //TODO Успешное добавление элемента ответ
     public static function add($addData): array
     {
-        $result = BooksTable::add($addData);
-        AddMessage2Log($result);
+        try {
+            $result = BooksTable::add($addData);
 
-        return ['ID' => $result];
+            if (!$result->isSuccess()) {
+                throw new \Exception(implode(', ', $result->getErrorMessages()), 400);
+            }
+        } catch (\Exception $e) {
+            http_response_code($e->getCode());
+            return ['error' => true, 'message' => $e->getMessage()];
+        }
+
+        return ['error' => false, 'data' => ['ID' => $result->getId()], 'message' => 'Книга успешно создана'];
+    }
+
+    #[Delete(
+        path: '/books/delete.php',
+        description: 'Удаление книги',
+        requestBody: new RequestBody(
+            description: 'Данные о книге',
+            required: true,
+            content: new JsonContent(ref: '#/components/schemas/deleteBook'),
+        ),
+        tags: ['Books'],
+        responses: [
+            new Response(
+                response: 200,
+                description: 'Действие выполнено успешно',
+                content: new JsonContent(ref: "#/components/schemas/SuccessEmptyResponse"),
+            ),
+            new Response(
+                response: 400,
+                description: 'Ошибка в веденных данных',
+                content: new JsonContent(ref: "#/components/schemas/BadRequestResponse"),
+            ),
+            new Response(
+                response: 401,
+                description: 'Пользователь не авторизован',
+                content: new JsonContent(ref: "#/components/schemas/UnauthorizedResponse")
+            ),
+            new Response(
+                response: 403,
+                description: 'Нет доступа',
+                content: new JsonContent(ref: "#/components/schemas/ForbiddenResponse")
+            ),
+            new Response(
+                response: 404,
+                description: 'Страница не найдена',
+                content: new JsonContent(ref: "#/components/schemas/NotFoundResponse")
+            ),
+        ]
+    )]
+    public static function delete($id): array
+    {
+        try {
+            $result = BooksTable::delete($id);
+            if (!$result->isSuccess()) {
+                throw new \Exception(implode(', ', $result->getErrorMessages()), 400);
+            }
+        } catch (\Exception $e) {
+            http_response_code($e->getCode());
+            return ['error' => true, 'message' => $e->getMessage()];
+        }
+
+        return ['error' => false, 'message' => 'Книга успешно удалена'];
+    }
+
+    #[Put(
+        path: '/books/update.php',
+        description: 'Обновление наименования книги',
+        requestBody: new RequestBody(
+            description: 'Данные для обновления книги',
+            required: true,
+            content: new JsonContent(ref: '#/components/schemas/updateBook'),
+        ),
+        tags: ['Books'],
+        responses: [
+            new Response(
+                response: 200,
+                description: 'Действие выполнено успешно',
+                content: new JsonContent(ref: "#/components/schemas/SuccessEmptyResponse"),
+            ),
+            new Response(
+                response: 400,
+                description: 'Ошибка в веденных данных',
+                content: new JsonContent(ref: "#/components/schemas/BadRequestResponse"),
+            ),
+            new Response(
+                response: 401,
+                description: 'Пользователь не авторизован',
+                content: new JsonContent(ref: "#/components/schemas/UnauthorizedResponse")
+            ),
+            new Response(
+                response: 403,
+                description: 'Нет доступа',
+                content: new JsonContent(ref: "#/components/schemas/ForbiddenResponse")
+            ),
+            new Response(
+                response: 404,
+                description: 'Страница не найдена',
+                content: new JsonContent(ref: "#/components/schemas/NotFoundResponse")
+            ),
+        ]
+    )]
+    public static function update($data): array
+    {
+        try {
+            $result = BooksTable::update($data['ID'], $data);
+            if (!$result->isSuccess()) {
+                throw new \Exception(implode(', ', $result->getErrorMessages()), 400);
+            }
+        } catch (\Exception $e) {
+            http_response_code($e->getCode());
+            return ['error' => true, 'message' => $e->getMessage()];
+        }
+        return ['error' => false, 'message' => 'Данные успешно обновлены'];
     }
 }

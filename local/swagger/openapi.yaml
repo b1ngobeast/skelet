@@ -31,6 +31,20 @@ paths:
           required: false
           schema:
             type: string
+        -
+          name: page
+          in: query
+          description: 'Порядковый номер страницы'
+          required: false
+          schema:
+            type: int64
+        -
+          name: pageSize
+          in: query
+          description: 'Размер страницы'
+          required: false
+          schema:
+            type: int64
       responses:
         '200':
           description: 'Успешное получение книг'
@@ -40,6 +54,7 @@ paths:
                 properties:
                   error: { type: boolean, example: false }
                   data: { type: array, items: { $ref: '#/components/schemas/book' } }
+                  pagination: { $ref: '#/components/schemas/navSchema' }
                 type: object
         '400':
           description: 'Ошибка в веденных данных'
@@ -82,10 +97,126 @@ paths:
       responses:
         '201':
           description: 'Успешное добавлении книги'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessCreateResponse'
+        '400':
+          description: 'Ошибка в веденных данных'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+        '401':
+          description: 'Пользователь не авторизован'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: 'Нет доступа'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '404':
+          description: 'Страница не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /books/delete.php:
+    delete:
+      tags:
+        - Books
+      description: 'Удаление книги'
+      operationId: a07ba0ddb319868727995e9e4fc65c75
+      requestBody:
+        description: 'Данные о книге'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/deleteBook'
+      responses:
+        '200':
+          description: 'Действие выполнено успешно'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEmptyResponse'
+        '400':
+          description: 'Ошибка в веденных данных'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+        '401':
+          description: 'Пользователь не авторизован'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: 'Нет доступа'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '404':
+          description: 'Страница не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /books/update.php:
+    put:
+      tags:
+        - Books
+      description: 'Обновление наименования книги'
+      operationId: a32cfc1d10d5778c97b30594557f9693
+      requestBody:
+        description: 'Данные для обновления книги'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateBook'
+      responses:
+        '200':
+          description: 'Действие выполнено успешно'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEmptyResponse'
+        '400':
+          description: 'Ошибка в веденных данных'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+        '401':
+          description: 'Пользователь не авторизован'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: 'Нет доступа'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '404':
+          description: 'Страница не найдена'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
 components:
   schemas:
     book:
-      title: 'Book Model'
+      title: 'Модель Книга'
       description: 'Таблица книг с привязкой к школам'
       required:
         - ID
@@ -109,9 +240,12 @@ components:
           description: 'Инвентарный номер'
           type: string
           format: string
+          maxLength: 20
+          minLength: 1
+          pattern: '/^[0-9]+$/'
         UF_SCHOOL:
-          title: 'Номер школы'
-          description: 'Номер школы из таблицы Школы'
+          title: 'ID школы'
+          description: 'ID школы'
           type: integer
           format: int64
         UF_ACTIVE:
@@ -119,6 +253,20 @@ components:
           description: 'Статус активности, true - активно'
           type: boolean
           format: bool
+      type: object
+    school:
+      title: 'Модель Школа'
+      properties:
+        ID:
+          title: ID
+          description: 'ID Школы'
+          type: integer
+          format: int64
+        UF_NAME:
+          title: 'Наименование школы'
+          description: 'Наименование школы'
+          type: string
+          format: string
       type: object
     addBook:
       title: 'Добавление книги'
@@ -141,6 +289,60 @@ components:
         UF_SCHOOL:
           title: 'Номер школы'
           description: 'Номер школы из таблицы Школы'
+          type: integer
+          format: int64
+      type: object
+    deleteBook:
+      title: 'Удаление книги'
+      description: 'Схема данных для удаления книги'
+      required:
+        - ID
+      properties:
+        ID:
+          title: ID
+          description: 'ID Книги для удаления'
+          type: integer
+          format: int64
+      type: object
+    updateBook:
+      title: 'Обновление книги'
+      description: 'Схема данных для обновления книги'
+      required:
+        - ID
+        - UF_NAME
+      properties:
+        ID:
+          title: ID
+          description: 'ID Книги для обновления'
+          type: integer
+          format: int64
+        UF_NAME:
+          title: UF_NAME
+          description: 'Наименование книги'
+          type: integer
+          format: string
+      type: object
+    navSchema:
+      title: Пагинация
+      description: Пагинация
+      required:
+        - current_page
+        - pages
+        - count
+      properties:
+        count:
+          title: count
+          description: 'Общее количество записей'
+          type: integer
+          format: int64
+        current_page:
+          title: current_page
+          description: 'Текущая страница'
+          type: integer
+          format: int64
+        pages:
+          title: pages
+          description: 'Общее количество страниц'
           type: integer
           format: int64
       type: object
@@ -185,6 +387,39 @@ components:
         message:
           type: string
           example: 'Страница не найдена'
+      type: object
+    SuccessCreateResponse:
+      title: 'Ответ для 200 кода с ID нового элемента'
+      description: 'Возвращает 200, сообщение об успешном действии и ID нового элемента'
+      required:
+        - error
+        - message
+        - data
+      properties:
+        error:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: 'Создание прошло успешно'
+        data:
+          type: object
+          example:
+            ID: 1
+      type: object
+    SuccessEmptyResponse:
+      title: 'Ответ для 200 кода без данных'
+      description: 'Возвращает 200 и сообщение об успешном действии'
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: 'Действие успешно выполнено'
       type: object
     UnauthorizedResponse:
       title: 'Ответ для 401 кода'
